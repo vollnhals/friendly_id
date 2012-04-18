@@ -78,17 +78,6 @@ class HistoryTest < MiniTest::Unit::TestCase
     end
   end
 
-
-  test "should raise error if used with scoped" do
-    model_class = Class.new(ActiveRecord::Base) do
-      self.abstract_class = true
-      extend FriendlyId
-    end
-    assert_raises RuntimeError do
-      model_class.friendly_id :name, :use => [:history, :scoped]
-    end
-  end
-
   test "should handle renames" do
     with_instance_of(model_class) do |record|
       record.name = 'x'

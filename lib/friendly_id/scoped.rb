@@ -86,7 +86,6 @@ an example of one way to set this up:
     # feature.
     def self.included(model_class)
       model_class.instance_eval do
-        raise "FriendlyId::Scoped is incompatibe with FriendlyId::History" if self < History
         include Slugged unless self < Slugged
         friendly_id_config.class.send :include, Configuration
         friendly_id_config.slug_generator_class.send :include, SlugGenerator
