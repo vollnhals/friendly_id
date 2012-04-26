@@ -136,3 +136,67 @@ class HistoryTestWithSti < HistoryTest
     Editorialist
   end
 end
+
+
+
+class City < ActiveRecord::Base
+  has_many :restaurants
+end
+
+class Restaurant < ActiveRecord::Base
+  extend FriendlyId
+  belongs_to :city
+  friendly_id :name, :use => [:history, :scoped], :scope => :city
+end
+
+class ScopedHistoryTest < MiniTest::Unit::TestCase
+  include FriendlyId::Test
+  include FriendlyId::Test::Shared::Core
+
+  def model_class
+    Restaurant
+  end
+
+  test "should find old scoped slugs" do
+    city = City.create!
+    with_instance_of(Restaurant) do |record|
+      record.city = city
+
+      record.name = "x"
+      record.save!
+
+      record.name = "y"
+      record.save!
+
+      assert_equal city.restaurants.find("x"), city.restaurants.find("y")
+    end
+  end
+
+  test "should consider old scoped slugs when creating slugs" do
+    city = City.create!
+    with_instance_of(Restaurant) do |record|
+      record.city = city
+
+      record.name = "x"
+      record.save!
+
+      record.name = "y"
+      record.save!
+
+      second_record = model_class.create! :city => city, :name => 'x'
+      assert_equal "x--2", second_record.friendly_id
+
+      third_record = model_class.create! :city => city, :name => 'y'
+      assert_equal "y--2", third_record.friendly_id
+    end
+  end
+
+  test "should allow equal slugs in different scopes" do
+    city = City.create!
+    second_city = City.create!
+    record = model_class.create! :city => city, :name => 'x'
+    second_record = model_class.create! :city => second_city, :name => 'x'
+
+    assert_equal record.slug, second_record.slug
+  end
+end

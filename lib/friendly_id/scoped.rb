@@ -92,6 +92,10 @@ an example of one way to set this up:
       end
     end
 
+    def serialized_scope
+      friendly_id_config.scope_columns.sort.map { |column| "#{column}:#{send(column)}" }.join(",")
+    end
+
     # This module adds the +:scope+ configuration option to
     # {FriendlyId::Configuration FriendlyId::Configuration}.
     module Configuration
@@ -136,12 +140,18 @@ an example of one way to set this up:
       private
 
       def conflict
-        columns = friendly_id_config.scope_columns
-        matched = columns.inject(conflicts) do |memo, column|
-           memo.where(column => sluggable.send(column))
-        end
+        if friendly_id_config.uses?(:history)
+          # When using the :history module +conflicts+ already returns only real conflicts, so there's no need to check
+          # for the scope columns again
+          conflicts.first
+        else
+          columns = friendly_id_config.scope_columns
+          matched = columns.inject(conflicts) do |memo, column|
+            memo.where(column => sluggable.send(column))
+          end
 
-        matched.first
+          matched.first
+        end
       end
     end
   end

@@ -81,6 +81,7 @@ method.
       relation.delete_all unless result.empty?
       slugs.create! do |record|
         record.slug = friendly_id
+        record.scope = serialized_scope if friendly_id_config.uses?(:scoped)
       end
     end
 
@@ -128,6 +129,9 @@ method.
         scope = Slug.where("slug = ? OR slug LIKE ?", normalized, wildcard)
         scope = scope.where(:sluggable_type => sluggable_class.to_s)
         scope = scope.where("sluggable_id <> ?", value) unless sluggable.new_record?
+        if sluggable.friendly_id_config.uses?(:scoped)
+          scope = scope.where("scope = ?", sluggable.serialized_scope)
+        end
         scope.order("LENGTH(slug) DESC, slug DESC")
       end
     end
