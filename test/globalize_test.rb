@@ -48,7 +48,7 @@ class GlobalizeRegressionTest < MiniTest::Unit::TestCase
     I18n.locale = :en
   end
 
-  test "should raise ActiveRecord::NotFound when searching for slug in different locale" do
+  test "should not raise NoMethodError when searching by non-current locale" do
     transaction do
       TranslatedArticle.destroy_all
       I18n.with_locale(:en) {TranslatedArticle.create(:title => 'a title')}
