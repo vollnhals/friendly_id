@@ -38,5 +38,31 @@ class GlobalizeTest < MiniTest::Unit::TestCase
       end
     end
   end
+end
 
+class GlobalizeRegressionTest < MiniTest::Unit::TestCase
+
+  include FriendlyId::Test
+
+  def setup
+    I18n.locale = :en
+  end
+
+  test "should raise ActiveRecord::NotFound when searching for slug in different locale" do
+    transaction do
+      TranslatedArticle.destroy_all
+      I18n.with_locale(:en) {TranslatedArticle.create(:title => 'a title')}
+      article = TranslatedArticle.find('a-title')
+      Globalize.with_locale(:es) { article.update_attributes(:title => 'un título') }
+      I18n.locale = :en
+      slug_en = TranslatedArticle.first.slug
+      I18n.locale = :es
+      slug_es = TranslatedArticle.first.slug
+      assert TranslatedArticle.find slug_es
+      assert TranslatedArticle.find slug_es
+      assert TranslatedArticle.find slug_en
+      assert_empty TranslatedArticle.where :slug => slug_en
+      refute_empty TranslatedArticle.where :slug => slug_es
+    end
+  end
 end
